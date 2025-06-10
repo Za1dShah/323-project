@@ -153,6 +153,7 @@ class DocumentProcessor:
             return f"[PDF EXTRACTION FAILED: {pdf_path}]"
     
     def _extract_text_from_docx(self, docx_path: Path) -> str:
+        
         """
         Extract text from a DOCX file.
         
@@ -163,7 +164,7 @@ class DocumentProcessor:
             str: Extracted text.
         """
         try:
-            import docx
+            import docx # type: ignore
             doc = docx.Document(docx_path)
             return '\n\n'.join([para.text for para in doc.paragraphs])
         except ImportError:
@@ -174,6 +175,9 @@ class DocumentProcessor:
             return '\n\n'.join([para.text for para in doc.paragraphs])
     
     def _extract_text_from_text_file(self, text_path: Path) -> str:
+        
+        
+        
         """
         Extract text from a text file.
         
