@@ -1,8 +1,7 @@
 """
 Query engine for the Bank AI Chatbot.
 """
-import nltk
-nltk.data.path.append('/Users/sampk/nltk_data')  
+
 
 
 import re
