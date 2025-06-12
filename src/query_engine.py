@@ -4,7 +4,7 @@ Query engine for the Bank AI Chatbot.
 
 import re
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
@@ -20,7 +20,24 @@ from .config import (
     DEFAULT_RESPONSE,
 )
 
+# Download required NLTK corpora (run once)
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+
 logger = logging.getLogger(__name__)
+
+
+def check_home_loan_eligibility(user_data: dict) -> str:
+    """Check if the user is eligible for a home loan based on credit score and income."""
+    income = user_data.get("monthly_income", 0)
+    credit_score = user_data.get("credit_score", 0)
+
+    if credit_score >= 700:
+        return "Yes, based on your credit score and income, you may be eligible for a home loan."
+    else:
+        return "Based on your credit score, you might not currently qualify for a home loan."
+    
 
 
 class QueryEngine:
@@ -36,135 +53,74 @@ class QueryEngine:
         self.lemmatizer = WordNetLemmatizer()
 
     def preprocess_query(self, query: str) -> str:
-        """
-        Preprocess the query text.
-
-        Args:
-            query: The raw query text
-
-        Returns:
-            Preprocessed query text
-        """
-        # Convert to lowercase
+        """Preprocess the query text."""
         query = query.lower()
-
-        # Remove special characters
         query = re.sub(r"[^\w\s]", " ", query)
-
-        # Tokenize
         tokens = word_tokenize(query)
-
-        # Remove stop words and lemmatize
         tokens = [
             self.lemmatizer.lemmatize(token)
             for token in tokens
             if token not in self.stop_words
         ]
-
-        # Join back into a string
         return " ".join(tokens)
 
     def extract_query_intent(self, query: str) -> str:
-        """
-        Extract the main intent of the query.
-
-        Args:
-            query: The query text
-
-        Returns:
-            The main intent category
-        """
-        # This is a simple implementation - could be enhanced with a classifier
+        """Extract the main intent of the query."""
         query = query.lower()
-
         if any(word in query for word in ["loan", "borrow", "mortgage", "finance"]):
             return "loans"
         elif any(word in query for word in ["credit", "card", "interest", "payment"]):
             return "credit_cards"
-        elif any(
-            word in query
-            for word in ["account", "balance", "transfer", "deposit", "withdraw"]
-        ):
+        elif any(word in query for word in ["account", "balance", "transfer", "deposit", "withdraw"]):
             return "account_services"
         elif any(word in query for word in ["score", "improve", "rating", "history"]):
             return "credit_improvement"
         else:
             return "general_banking"
 
-    def personalize_response(
-        self, response: str, account_info: Optional[Dict[str, Any]]
-    ) -> str:
-        """
-        Personalize the response based on account information.
-
-        Args:
-            response: The base response
-            account_info: Account information dictionary
-
-        Returns:
-            Personalized response
-        """
+    def personalize_response(self, response: str, account_info: Optional[Dict[str, Any]]) -> str:
+        """Personalize the response based on account information."""
         if not account_info:
             return response
 
-        # Replace placeholders with actual account info
         personalized = response
-
-        # Add personalized greeting
         personalized = f"Hi {account_info['name']}, " + personalized
-
-        # Replace generic terms with specific account details
         personalized = personalized.replace(
             "your account", f"your {account_info['account_type']} account"
         )
         personalized = personalized.replace(
             "your balance", f"your balance of ${account_info['balance']}"
         )
-
         return personalized
 
-    def process_query(self, query_text, account_info=None, conversation_history=None):
-        """
-        Process a user query and return a response.
-
-        Args:
-            query_text: The user's query text
-            account_info: Optional account information for personalization
-            conversation_history: Optional conversation history for context
-
-        Returns:
-            Dictionary containing response, sources, and confidence
-        """
+    def process_query(
+        self,
+        query_text: str,
+        account_info: Optional[Dict[str, Any]] = None,
+        conversation_history: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Process a user query and return a response."""
         try:
-            # Preprocess the query
             preprocessed_query = self.preprocess_query(query_text)
 
-            # Check for account-specific queries first
+            # Account-specific queries
             if account_info:
-                # Balance inquiry
-                if any(
-                    word in preprocessed_query
-                    for word in ["balance", "money", "funds", "account"]
-                ):
-                    response = (
-                        f"Your current balance is ${account_info['balance']:.2f}."
-                    )
+                if any(word in preprocessed_query for word in ["balance", "money", "fund", "account"]):
+                    response = f"Your current balance is ${account_info['balance']:.2f}."
                     return {
                         "response": self.personalize_response(response, account_info),
                         "sources": [],
                         "confidence": 0.95,
                     }
 
-                # Credit score inquiry
-                if any(
-                    word in preprocessed_query for word in ["credit", "score", "rating"]
-                ):
-                    response = f"Your credit score is {account_info['credit_score']}."
-                    if account_info["credit_score"] >= 740:
+                if any(word in preprocessed_query for word in ["credit", "score", "rating"]):
+                    score = account_info.get("credit_score", 0)
+                    response = f"Your credit score is {score}."
+                    if score >= 740:
                         response += " This is considered excellent."
-                    elif account_info["credit_score"] >= 670:
+                    elif score >= 670:
                         response += " This is considered good."
-                    elif account_info["credit_score"] >= 580:
+                    elif score >= 580:
                         response += " This is considered fair."
                     else:
                         response += " This is considered poor."
@@ -174,36 +130,37 @@ class QueryEngine:
                         "confidence": 0.95,
                     }
 
-            # For non-account specific queries, search the knowledge base
-            intent = self.extract_query_intent(query_text)
-            results = self.knowledge_base.search(
-                preprocessed_query, intent, top_k=TOP_K_RESULTS
-            )
+                if any(phrase in preprocessed_query for phrase in ["home loan", "loan eligibility", "eligible for loan"]):
+                    response = check_home_loan_eligibility(account_info)
+                    return {
+                        "response": self.personalize_response(response, account_info),
+                        "sources": [],
+                        "confidence": 0.95,
+                    }
 
-            if results and results[0]["score"] >= SIMILARITY_THRESHOLD:
-                # Use the top result to generate a response
-                response = results[0]["content"]
+            # Knowledge base query
+            results = self.knowledge_base.query(preprocessed_query)
 
-                # Truncate if too long
+            if results and results[0]["relevance_score"] >= SIMILARITY_THRESHOLD:
+                response = results[0]["text"]
                 if len(response) > MAX_RESPONSE_LENGTH:
                     response = response[:MAX_RESPONSE_LENGTH] + "..."
 
-                # Format sources if needed
                 sources = []
                 if INCLUDE_SOURCES:
                     sources = [
-                        {"title": r["title"], "url": r.get("url", "")}
+                        {"title": r["document"], "url": r.get("source", "")}
                         for r in results[:3]
                     ]
 
                 return {
                     "response": self.personalize_response(response, account_info),
                     "sources": sources,
-                    "confidence": results[0]["score"],
+                    "confidence": results[0]["relevance_score"],
                 }
             else:
-                # No good match found
                 return {"response": DEFAULT_RESPONSE, "sources": [], "confidence": 0.0}
+
         except Exception as e:
             logger.error(f"Error processing query: {e}", exc_info=True)
             return {
@@ -212,3 +169,4 @@ class QueryEngine:
                 "confidence": 0.0,
                 "error": str(e),
             }
+
