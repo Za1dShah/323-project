@@ -37,7 +37,6 @@ def check_home_loan_eligibility(user_data: dict) -> str:
         return "Yes, based on your credit score and income, you may be eligible for a home loan."
     else:
         return "Based on your credit score, you might not currently qualify for a home loan."
-    
 
 
 class QueryEngine:
@@ -138,6 +137,18 @@ class QueryEngine:
                         "confidence": 0.95,
                     }
 
+            # Hardcoded rule for personal loan requirements
+            if "requirement" in preprocessed_query and "personal loan" in preprocessed_query:
+                response = (
+                    "To apply for a personal loan, you generally need a valid Emirates ID, proof of income, "
+                    "a minimum monthly salary (usually AED 5,000+), and a good credit score."
+                )
+                return {
+                    "response": self.personalize_response(response, account_info),
+                    "sources": [],
+                    "confidence": 0.9,
+                }
+
             # Knowledge base query
             results = self.knowledge_base.query(preprocessed_query)
 
@@ -169,4 +180,3 @@ class QueryEngine:
                 "confidence": 0.0,
                 "error": str(e),
             }
-
