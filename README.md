@@ -43,60 +43,29 @@ bank_chatbot/
 ### Prerequisites
 - Python 3.8 or higher
 - pip (Python package manager)
-- Anaconda3 (for Windows only)
 - Virtual environment (recommended)
 
 ### Installation Steps
 
 1. Clone the repository or extract the provided files to your desired location.
 
-2. Open a terminal inside the project. #On Windows, use Anaconda Prompt
-   **Note: To change directory in Anaconda Prompt,
-	   >Right Click Anaconda Prompt
-	   >Select Properties
-	   >In "Start In" field, add the directory of your project
-	   >Open Anaconda Prompt
-
-3. Create and activate a virtual environment (optional but recommended):
+2. Create and activate a virtual environment (optional but recommended):
    ```
    python -m venv venv
-   source venv/bin/activate
-   ```  
-   # On Windows:
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
-   conda create -n venv python=3.10 (if using python version 3.10, change this according to python version)
-   **Note: Press y when prompted 
-   conda activate venv
-   ```
-   **Note: If you get "cannot be loaded because the execution of scripts is disabled on this system" on Windows,
-	   open Windows PowerShell or Command Prompt as an administrator and run the following code
-	   ```
-	   Set-ExecutionPolicy Unrestricted -Force
-	   ```
-	   Then rerun the following code in Anaconda Prompt
-	   ```
-	   conda activate venv
-	   ```
 
-4. Install the required packages:
+3. Install the required packages:
    ```
    pip install flask nltk sentence-transformers faiss-cpu python-docx
    ```5
-   ```
-   #On Windows:
-   ```
-   conda install -c conda-forge faiss-cpu
-   **Note: press y when prompted
-   pip install flask python-docx sentence-transformers nltk
-   ```
 
-5. Download NLTK data:
+4. Download NLTK data:
    ```
    python -c "import nltk; nltk.download('punkt')"
-   python -c "import nltk; nltk.download('punkt_tab')"
    ```
 
-6. Add your banking information documents to the appropriate subdirectories in `data/documents/`:
+5. Add your banking information documents to the appropriate subdirectories in `data/documents/`:
    - General banking information: `data/documents/general_banking/`
    - Account services information: `data/documents/account_services/`
    - Loan information: `data/documents/loans/`
@@ -105,11 +74,11 @@ bank_chatbot/
 
    Supported document formats: PDF, DOCX, TXT, MD
 
-7. Process the documents:
+6. Process the documents:
    - Run the application (see below)
    - Click on "Process Documents" in the web interface
 
-8. Start using the chatbot!
+7. Start using the chatbot!
 
 ## Running the Application
 
