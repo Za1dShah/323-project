@@ -112,6 +112,32 @@ class QueryEngine:
                         "confidence": 0.95,
                     }
 
+                if "improve" in preprocessed_query and "credit" in preprocessed_query:
+                    score = account_info.get("credit_score", 0)
+
+                    if score < 580:
+                        response = (
+                            "There are several ways you can improve your credit score. Since your score is currently considered poor, "
+                            "focus on consistently making on-time payments, paying down outstanding balances, and avoiding new debt. "
+                            "Reducing the number of active credit cards and loans you hold can also help."
+                        )
+                    elif score < 670:
+                        response = (
+                            "Your credit score is fair. To improve it, you should continue making on-time payments, pay off credit card balances, "
+                            "limit hard inquiries, and consider reducing the number of open credit lines or loans."
+                        )
+                    else:
+                        response = (
+                            "Your credit score is good. To push it even higher, make sure to maintain low credit utilization, avoid unnecessary new credit, "
+                            "and keep making timely payments on all your accounts."
+                        )
+
+                    return {
+                        "response": self.personalize_response(response, account_info),
+                        "sources": [],
+                        "confidence": 0.95,
+                    }
+
                 if any(word in preprocessed_query for word in ["credit", "score", "rating"]):
                     score = account_info.get("credit_score", 0)
                     response = f"Your credit score is {score}."
